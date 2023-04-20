@@ -6,31 +6,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login de acceso</title>
       <!-- Agrega las referencias a los archivos CSS de Bootstrap -->
-    <link rel="stylesheet" href="C:\Users\Brenda\Documents\GitHub\sistema-consulta\static\css\bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/main.css">
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-          <div class="col-md-4 offset-md-4 mt-5">
-            <h1 class="text-center mb-4">Inicio de sesión</h1>
-            <form action="{{ url_for('login') }}" method="POST">
-              <div class="form-group">
-                <label for="username">Usuario</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-              </div>
-              <div class="form-group">
-                <label for="password">Contraseña</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Iniciar sesión</button>
-            </form>
-          </div>
+  <header>
+    <div class="container-fluid mt-5">
+      <div class="row align-items-center g-5">
+        <div class="col">
+          <img src="images\logo_tecnm-removebg-preview.png" class=" mx-auto d-block img-fluid" style="height: 150px;" " alt="Logo tecnm">   
         </div>
+        <div class="col text-center">
+          <h1>Sistema de Consulta Escolar</h1>
+        </div>
+        <div class="col align-items-right">
+          <img src="images\logo_itp-removebg-preview.png" class="mx-auto d-block img-fluid" style="height: 150px;" alt="Logo Ito">
+        </div>
+      </div>
     </div>
+          <div class="" >
+
+  </header>
+  <main>
+    <div class="container mt-5">
+      <div class="row align-items-center">
+        <div class="col-md-4 offset-md-4 mt-5 shadow-lg p-3 bg-body rounded">
+          <h2 class="text-center mb-4">Inicio de sesión</h2>
+          <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-outline mb-4">
+              <label class="form-label" for="username">Usuario</label>
+              <input type="text" class="form-control shadow p-3" id="username" name="username" required>
+            </div>
+            <div class="form-outline mb-4">
+              <label class="form-label" for="password">Contraseña</label>
+              <input type="password" class="form-control shadow p-3" id="password" name="password" required>
+            </div>
+            <!--boton de enviar-->
+            <div class="d-grid gap-2 mb-4 mt-5 mx-auto">
+              <button type="submit" class="btn btn-primary btn-lg">Acceder</button>
+            </div>
+            
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+
+  </footer>
+   
       <!-- Agrega las referencias a los archivos JavaScript de Bootstrap -->
       <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-      <script src="C:\Users\Brenda\Documents\GitHub\sistema-consulta\static\js\bootstrap.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
 </body>
 </html>
 

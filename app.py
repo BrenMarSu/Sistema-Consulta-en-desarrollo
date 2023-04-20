@@ -17,7 +17,7 @@ auth = HTTPBasicAuth()
 
 # Configurar la sesión con el módulo flask_session
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=3)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
 Session(app)
 
 # Conexión a la base de datos
@@ -39,17 +39,31 @@ def verify_password(username, password):
 @app.route('/', methods=['GET', 'POST'])
 @auth.login_required
 def index():
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos",
+    )
+    alumnos = cursor.fetchall()
+    cursor.close()
+
+    alumnos = []
+    for fila in alumnos:
+        alumno = {'numcon': fila[0], 'apepat': fila[1], 'apemat': fila[2], 'nom': fila[3], 'sta': fila[4]}
+        alumnos.append(alumno)
+
     # Si la solicitud es POST, significa que se hizo clic en el botón "Cerrar sesión"
     if request.method == 'POST':
         session.pop('username', None)
         return redirect(url_for('login'))
+        
     # Si la sesión está activa, renderiza la página protegida
     if 'username' in session:
-        return render_template('protected.html') 
+        return render_template('index.html')
+         
     # Si la sesión no está activa, redirige al inicio de sesión
     return redirect(url_for('login'))
-
     #return "¡Acceso concedido!"
+
 
 # Ruta de inicio de sesión
 @app.route('/login', methods=['GET', 'POST'])
@@ -62,11 +76,11 @@ def login():
         if username == 'SuperUsuario' and password == 'ARGMEC': # Reemplaza esto por tu lógica de verificación de usuario y contraseña
             session['username'] = username
             session.permanent = True
-            app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+            app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
             return redirect(url_for('index'))
     # Si la sesión está activa, redirige a la página protegida
     if 'username' in session:
-        return render_template('protected.html') 
+        return render_template('index.html') 
     # Si la sesión no está activa, renderiza la página de inicio de sesión
     return render_template('login.html')
 
@@ -75,21 +89,61 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# Ruta para obtener los alumnos que estan vigentes
-@app.route('/alumnos/<sta>', methods=['GET'])
+#Ruta para obtener los alumnos que estan vigentes
+@app.route('/alumnos/status/<sta>', methods=['GET'])
 @auth.login_required
-def obtener_alumnos(sta):
+def obtener_alumnos_status(sta):
 
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos WHERE sta=1",
+        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos WHERE sta=%s",
         (sta,)
     )
     alumnos = cursor.fetchall()
     cursor.close()
     return jsonify(alumnos)
 
+
+# ruta para obtener todos los alumnos o filtrarlos
+@app.route('/alumnos/filtrar', methods=['GET'])
+def obtener_alumnos():
+    try:
+        # obtener los parámetros de filtrado desde la solicitud GET
+        nombre = request.args.get('nombre', '')
+        status = request.args.get('status', '')
+        numcon = request.args.get('numcon', '')
+
+        # construir la consulta SQL
+        consulta = "SELECT numcon, apepat, apemat, nom, sta FROM alumnos"
+        if nombre:
+            consulta += f" WHERE LOWER(nom) LIKE LOWER('%{nombre}%')"
+        if status:
+            consulta += f" WHERE sta = {status}"
+        if numcon:
+            consulta += f" WHERE numcon = {numcon}"
+        
+        # conectar a la base de datos y ejecutar la consulta
+        cur = conn.cursor()
+        cur.execute(consulta)
+        filas = cur.fetchall()
+        
+        # cerrar la conexión a la base de datos
+        cur.close()
+        
+        # construir la respuesta como una lista de diccionarios
+        alumnos = []
+        for fila in filas:
+            alumno = {'numcon': fila[0], 'apepat': fila[1], 'apemat': fila[2], 'nom': fila[3], 'sta': fila[4]}
+            alumnos.append(alumno)
+        
+        # devolver la respuesta en formato JSON
+        return jsonify(alumnos)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
 if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.run(debug=True)
+
