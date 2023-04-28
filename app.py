@@ -9,7 +9,7 @@ from datetime import timedelta
 import psycopg2
 
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='templates', static_url_path='/static')
 
 #autenticación
 auth = HTTPBasicAuth()
@@ -39,18 +39,6 @@ def verify_password(username, password):
 @app.route('/', methods=['GET', 'POST'])
 @auth.login_required
 def index():
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos",
-    )
-    alumnos = cursor.fetchall()
-    cursor.close()
-
-    alumnos = []
-    for fila in alumnos:
-        alumno = {'numcon': fila[0], 'apepat': fila[1], 'apemat': fila[2], 'nom': fila[3], 'sta': fila[4]}
-        alumnos.append(alumno)
-
     # Si la solicitud es POST, significa que se hizo clic en el botón "Cerrar sesión"
     if request.method == 'POST':
         session.pop('username', None)
@@ -80,7 +68,7 @@ def login():
             return redirect(url_for('index'))
     # Si la sesión está activa, redirige a la página protegida
     if 'username' in session:
-        return render_template('index.html') 
+        return render_template('index.html')
     # Si la sesión no está activa, renderiza la página de inicio de sesión
     return render_template('login.html')
 
@@ -96,7 +84,7 @@ def obtener_alumnos_status(sta):
 
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos WHERE sta=%s",
+        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos WHERE sta=%s ORDER BY numcon ASC",
         (sta,)
     )
     alumnos = cursor.fetchall()
@@ -105,22 +93,22 @@ def obtener_alumnos_status(sta):
 
 
 # ruta para obtener todos los alumnos o filtrarlos
-@app.route('/alumnos/filtrar', methods=['GET'])
+@app.route('/alumnos/filtrar', methods=['POST'])
 def obtener_alumnos():
     try:
         # obtener los parámetros de filtrado desde la solicitud GET
-        nombre = request.args.get('nombre', '')
-        status = request.args.get('status', '')
-        numcon = request.args.get('numcon', '')
+        nombre = request.form.get('nombre', '')
+        status = request.form.get('status', '')
+        numcon = request.form.get('numcon', '')
 
         # construir la consulta SQL
         consulta = "SELECT numcon, apepat, apemat, nom, sta FROM alumnos"
         if nombre:
-            consulta += f" WHERE LOWER(nom) LIKE LOWER('%{nombre}%')"
+            consulta += f" WHERE LOWER(nom) LIKE LOWER('%{nombre}%') ORDER BY numcon ASC"
         if status:
-            consulta += f" WHERE sta = {status}"
+            consulta += f" WHERE sta = {status} ORDER BY numcon ASC"
         if numcon:
-            consulta += f" WHERE numcon = {numcon}"
+            consulta += f" WHERE numcon = {numcon} ORDER BY numcon ASC"
         
         # conectar a la base de datos y ejecutar la consulta
         cur = conn.cursor()
@@ -139,8 +127,25 @@ def obtener_alumnos():
         # devolver la respuesta en formato JSON
         return jsonify(alumnos)
     
-    except Exception as e:
-        return jsonify({'error': str(e)})
+    except :
+        return 'Error al obtener los alumnos'
+    
+@app.route('/listado', methods=['GET'])
+@auth.login_required
+def listado():
+
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT numcon, apepat, apemat, nom, sta  FROM alumnos ORDER BY numcon ASC",
+    )
+    alumnos = cursor.fetchall()
+    cursor.close()
+
+    alumnos = []
+    for fila in alumnos:
+        alumno = {'numcon': fila[0], 'apepat': fila[1], 'apemat': fila[2], 'nom': fila[3], 'sta': fila[4]}
+        alumnos.append(alumno)
+    return jsonify(alumnos)
     
 if __name__ == '__main__':
     app.secret_key = 'super secret key'
