@@ -22,16 +22,16 @@ Session(app)
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
-    host="localhost",
-    database="SIE",
-    user="postgres",
-    password="Br3nd4"
+    host=" ",
+    database=" ",
+    user=" ",
+    password=" "
 )
 
 @auth.verify_password
 def verify_password(username, password):
     # Aquí deberás verificar el usuario y la contraseña
-    if username == 'SuperUsuario' and password == 'ARGMEC':
+    if username == ' ' and password == ' ':
         return "Acesso concedido"
         
     return False
@@ -61,7 +61,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         # Aquí va la lógica de verificación de usuario y contraseña
-        if username == 'SuperUsuario' and password == 'ARGMEC': # Reemplaza esto por tu lógica de verificación de usuario y contraseña
+        if username == ' ' and password == ' ': # Reemplaza esto por tu lógica de verificación de usuario y contraseña
             session['username'] = username
             session.permanent = True
             app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
