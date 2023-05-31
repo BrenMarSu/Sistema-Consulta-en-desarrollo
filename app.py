@@ -22,16 +22,16 @@ Session(app)
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
-    host=" ",
-    database=" ",
-    user=" ",
-    password=" "
+    host="localhost",
+    database="SIE",
+    user="postgres",
+    password="Br3nd4"
 )
 
 @auth.verify_password
 def verify_password(username, password):
     # Aquí deberás verificar el usuario y la contraseña
-    if username == ' ' and password == ' ':
+    if username == 'SuperUsuario' and password == 'ARGMEC':
         return "Acesso concedido"
         
     return False
@@ -61,7 +61,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         # Aquí va la lógica de verificación de usuario y contraseña
-        if username == ' ' and password == ' ': # Reemplaza esto por tu lógica de verificación de usuario y contraseña
+        if username == 'SuperUsuario' and password == 'ARGMEC': # Reemplaza esto por tu lógica de verificación de usuario y contraseña
             session['username'] = username
             session.permanent = True
             app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
@@ -93,30 +93,72 @@ def obtener_alumnos_status(sta):
 
 
 # ruta para obtener todos los alumnos o filtrarlos
+#@app.route('/alumnos/filtrar', methods=['POST'])
+#def obtener_alumnos():
+#    try:
+#        # obtener los parámetros de filtrado desde la solicitud GET
+#        nombre = request.form.get('nombre', '')
+#        status = request.form.get('status', '')
+#        numcon = request.form.get('numcon', '')
+
+        # construir la consulta SQL
+#        consulta = "SELECT numcon, apepat, apemat, nom, sta FROM alumnos"
+#        if nombre:
+#            consulta += f" WHERE LOWER(nom) LIKE LOWER('%{nombre}%') ORDER BY numcon ASC"
+#        if status:
+#            consulta += f" WHERE sta = {status} ORDER BY numcon ASC"
+#        if numcon:
+#            consulta += f" WHERE numcon = {numcon} ORDER BY numcon ASC"
+        
+        # conectar a la base de datos y ejecutar la consulta
+#        cur = conn.cursor()
+#        cur.execute(consulta)
+#        filas = cur.fetchall()
+        
+        # cerrar la conexión a la base de datos
+#        cur.close()
+        
+        # construir la respuesta como una lista de diccionarios
+#        alumnos = []
+#        for fila in filas:
+#            alumno = {'numcon': fila[0], 'apepat': fila[1], 'apemat': fila[2], 'nom': fila[3], 'sta': fila[4]}
+#            alumnos.append(alumno)
+        
+        # devolver la respuesta en formato JSON
+#        return jsonify(alumnos)
+    
+#    except :
+#        return 'Error al obtener los alumnos'
+    
 @app.route('/alumnos/filtrar', methods=['POST'])
 def obtener_alumnos():
     try:
-        # obtener los parámetros de filtrado desde la solicitud GET
+        # obtener los parámetros de filtrado desde la solicitud POST
         nombre = request.form.get('nombre', '')
         status = request.form.get('status', '')
         numcon = request.form.get('numcon', '')
 
         # construir la consulta SQL
-        consulta = "SELECT numcon, apepat, apemat, nom, sta FROM alumnos"
+        consulta = "SELECT numcon, apepat, apemat, nom, sta FROM alumnos WHERE 1=1"
         if nombre:
-            consulta += f" WHERE LOWER(nom) LIKE LOWER('%{nombre}%') ORDER BY numcon ASC"
+            consulta += f" AND LOWER(nom) LIKE LOWER('%{nombre}%')"
         if status:
-            consulta += f" WHERE sta = {status} ORDER BY numcon ASC"
+            consulta += f" AND sta = {status}"
         if numcon:
-            consulta += f" WHERE numcon = {numcon} ORDER BY numcon ASC"
+            consulta += f" AND CAST(numcon AS text) = '{numcon}'"
+
+        #Solucion original, el error esta en el tipo de dato numcon en la base de datos
+        #if numcon:
+        #    consulta += f" AND numcon = {numcon}"
+        #    consulta += f" AND numcon = CAST({numcon} AS character varying)"
+        
+        # agregar el ordenamiento de menor a mayor
+        consulta += " ORDER BY numcon ASC"
         
         # conectar a la base de datos y ejecutar la consulta
         cur = conn.cursor()
         cur.execute(consulta)
         filas = cur.fetchall()
-        
-        # cerrar la conexión a la base de datos
-        cur.close()
         
         # construir la respuesta como una lista de diccionarios
         alumnos = []
@@ -125,10 +167,20 @@ def obtener_alumnos():
             alumnos.append(alumno)
         
         # devolver la respuesta en formato JSON
-        return jsonify(alumnos)
+        #return jsonify(alumnos)
+
+        # Realizar el commit
+        conn.commit()
+
+        # Renderizar el template de la tabla y pasar los datos de los alumnos
+        return render_template('index.html', alumnos=alumnos)
     
-    except :
-        return 'Error al obtener los alumnos'
+    
+    except Exception as e:
+        # Realizar el rollback
+        conn.rollback()
+        return 'Error al obtener los alumnos: ' + str(e)
+
     
 @app.route('/listado', methods=['GET'])
 @auth.login_required
